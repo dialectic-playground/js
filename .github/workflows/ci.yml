@@ -6,7 +6,7 @@
 # project listed in IMPLEMENTED in the root Makefile.
 # - Container (podman): `make check` in the toolchain image (./Containerfile), on Linux.
 # - Native (Linux, macOS, Windows): `make check roundtrip` with DP_RUNTIME=local;
-#   toolchain: actions/setup-node (24).
+#   toolchain: actions/setup-node (24), with the npm cache keyed on the projects' lockfiles.
 # - Shared tooling, DCO, and the required "CI result" check, as in every repository.
 #
 # Actions are pinned to full commit SHAs (organization policy); Dependabot keeps them current.
@@ -76,6 +76,8 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
+          cache: npm
+          cache-dependency-path: '*/package-lock.json'
 
       - name: make check roundtrip
         run: make check roundtrip
