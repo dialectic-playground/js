@@ -1,0 +1,24 @@
+{
+  "name": "dp-hello",
+  "version": "1.0.0",
+  "private": true,
+  "description": "dp-hello: print a greeting to standard output (dialectic-playground project 00-hello-world)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "dp-hello": "src/bin/dp-hello"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.12.0",
+    "prettier": "3.9.10"
+  }
+}

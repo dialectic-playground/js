@@ -1,19 +1,26 @@
-# 00-hello-world: Standard Terminal Hello World
+# 00-hello-world: Standard Terminal Hello World, in JavaScript (Node.js 24).
 #
-# Project Makefile template. It extends the universal build contract in
-# shared/templates/BASE-MAKEFILE, which defines the standard targets:
+# Extends the universal build contract in shared/templates/BASE-MAKEFILE:
 #
 #   make all | install | uninstall | test | check | lint | format | clean | distclean
 #   make test-hidden | grade | help
 #
-# A language implementation repository copies this file next to its sources, sets BIN_DIR,
-# fills in each DP_* hook with its toolchain's commands, and points CURRICULUM_ROOT at its
-# checkout of sdlc-curriculum (for example a git submodule). Hooks that are left empty make
-# their target fail with an explanation. `make help` shows which hooks are defined.
+# Toolchain: Node.js 24 and npm. package.json and package-lock.json in this directory define
+# the dp-hello package (ES modules: the program in src/lib/, the launcher in src/bin/, unit
+# tests in test/) and its exactly pinned development dependencies (ESLint, Prettier).
+#
+# Build: the program has no runtime dependencies, so there is nothing to compile. `make all`
+# installs the development dependencies into node_modules/ (`npm ci`, only when
+# package-lock.json is newer than the installed tree) and leaves the extensionless
+# `#!/usr/bin/env node` launcher src/bin/dp-hello executable, so BIN_DIR is src/bin.
+# Unit tests use the built-in node:test runner and need no dependencies.
+#
+# Install: package.json and src/{bin,lib} go to $(LIBDIR)/js/00-hello-world, and a `#!/bin/sh`
+# launcher that runs the installed src/bin/dp-hello with node (absolute path baked in) goes to
+# $(BINDIR)/dp-hello. Uninstall removes both.
 #
 # Container-first: goals run in the toolchain container built from the repository's
-# Containerfile (podman, then docker, then local; override with DP_RUNTIME). The image needs
-# the language toolchain, make, and python3 >= 3.11. Use DP_RUNTIME=local for native builds.
+# Containerfile (podman, then docker, then local; override with DP_RUNTIME).
 
 PROJECT := 00-hello-world
 TOOLS   := dp-hello
@@ -21,17 +28,59 @@ TOOLS   := dp-hello
 # Path to the sdlc-curriculum checkout (the specs, test suites, and runner live there).
 CURRICULUM_ROOT ?= ../sdlc-curriculum
 
-# Directory that contains the built executables after `make all`, e.g. build/bin.
-BIN_DIR :=
+NODE ?= node
+NPM  ?= npm
 
-# Language-specific commands. Use $(TOOLS), $(EXE), $(PREFIX), and $(BINDIR) as needed.
-DP_BUILD     =
-DP_INSTALL   =
-DP_UNINSTALL =
-DP_UNIT_TEST =
-DP_LINT      =
-DP_FORMAT    =
-DP_CLEAN     =
-DP_DISTCLEAN =
+# Directory that contains the built executables after `make all`.
+BIN_DIR := src/bin
+
+# Where `make install` puts the payload (see the header).
+INSTALL_DIR = $(LIBDIR)/js/$(PROJECT)
+
+# Install the development dependencies unless node_modules is already up to date with the
+# lockfile (npm writes node_modules/.package-lock.json after every install).
+NPM_CI = [ node_modules/.package-lock.json -nt package-lock.json ] \
+	|| $(NPM) ci --no-audit --no-fund
+ESLINT   = $(NODE) node_modules/eslint/bin/eslint.js
+PRETTIER = $(NODE) node_modules/prettier/bin/prettier.cjs
+
+define DP_BUILD
+$(NPM_CI)
+chmod +x $(BIN_DIR)/dp-hello
+endef
+
+DP_UNIT_TEST = $(NODE) --test
+
+define DP_LINT
+$(NPM_CI)
+$(ESLINT) --max-warnings 0 .
+$(PRETTIER) --check .
+endef
+
+define DP_FORMAT
+$(NPM_CI)
+$(PRETTIER) --write --log-level warn .
+endef
+
+define DP_INSTALL
+rm -rf "$(INSTALL_DIR)"
+mkdir -p "$(INSTALL_DIR)/src" "$(BINDIR)"
+cp package.json "$(INSTALL_DIR)/"
+cp -R src/bin src/lib "$(INSTALL_DIR)/src/"
+printf '#!/bin/sh\nexec node %s "$$@"\n' "'$(INSTALL_DIR)/src/bin/dp-hello'" \
+	> "$(BINDIR)/dp-hello"
+chmod +x "$(BINDIR)/dp-hello"
+"$(BINDIR)/dp-hello" --version
+endef
+
+define DP_UNINSTALL
+rm -f "$(BINDIR)/dp-hello"
+rm -rf "$(INSTALL_DIR)"
+rmdir "$(LIBDIR)/js" "$(LIBDIR)" 2>/dev/null || true
+endef
+
+DP_CLEAN = rm -rf coverage .eslintcache
+
+DP_DISTCLEAN = rm -rf node_modules
 
 include $(CURRICULUM_ROOT)/shared/templates/BASE-MAKEFILE

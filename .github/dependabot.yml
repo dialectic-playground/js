@@ -1,5 +1,5 @@
 # Keeps GitHub Actions (SHA-pinned) and the toolchain image digest current.
-# Package ecosystems (npm) are added when the first project's manifests exist.
+# npm: one entry per implemented project (its package.json and package-lock.json).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -23,3 +23,13 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: npm
+    directory: /00-hello-world
+    schedule:
+      interval: weekly
+    groups:
+      npm-development:
+        dependency-type: development
+    commit-message:
+      prefix: build

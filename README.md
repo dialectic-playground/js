@@ -16,7 +16,7 @@ This repository implements the eleven projects of the
 specified to the byte by the curriculum and verified by its black-box tests on Linux, macOS,
 and Windows.
 
-**Status:** repository and toolchain ready; no projects implemented yet.
+**Status:** Implemented projects: 00-hello-world.
 
 ## JavaScript at a glance
 
@@ -38,6 +38,26 @@ and Windows.
 | Native CI | actions/setup-node (24) |
 
 `make toolchain` verifies that the container and native toolchains are on this release line.
+
+### Project tooling
+
+Each project is an npm package (ES modules) with its own `package.json` and
+`package-lock.json`; development dependencies are pinned to exact versions and installed into
+the project's `node_modules/` by `npm ci` (run automatically by `make all`, `lint`, and
+`format` when the lockfile is newer than the installed tree). The container and native CI
+therefore run the same tool versions; Dependabot (`npm`) proposes updates.
+
+| Task | Tool |
+| :-- | :-- |
+| Unit tests | `node:test` (`node --test`, built in; no dependencies) |
+| Lint | ESLint (flat config, `eslint.config.js`, `--max-warnings 0`) and `prettier --check` |
+| Format | Prettier |
+
+`make all` leaves each tool in the project's `src/bin/` as an extensionless
+`#!/usr/bin/env node` launcher. **Windows:** run the tools from Git Bash or MSYS2, which honor
+`#!` lines (the curriculum's black-box runner starts the interpreter itself).
+`make install` copies the program to `$(LIBDIR)/js/<project>/` and writes a small `#!/bin/sh`
+launcher to `$(BINDIR)`.
 
 ## Layout
 

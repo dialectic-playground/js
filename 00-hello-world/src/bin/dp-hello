@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+// dp-hello launcher (BIN_DIR). The program lives in ../lib; see main.js.
+import { main } from "../lib/main.js";
+
+main();
