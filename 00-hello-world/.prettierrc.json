@@ -1,5 +1,10 @@
 {
   "overrides": [
-    { "files": "src/bin/dp-hello", "options": { "parser": "babel" } }
+    {
+      "files": "src/bin/dp-hello",
+      "options": {
+        "parser": "babel"
+      }
+    }
   ]
 }

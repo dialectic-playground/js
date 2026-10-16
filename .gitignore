@@ -16,3 +16,5 @@ node_modules/
 coverage/
 .eslintcache
 npm-debug.log*
+
+node_modules/
